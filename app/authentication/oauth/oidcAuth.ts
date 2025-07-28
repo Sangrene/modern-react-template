@@ -44,7 +44,7 @@ export const oidcAuth = ({
       response_type: "code",
       redirect_uri: env.value.BASE_URL + "/oidc/callback",
       state,
-      scope: "offline_access",
+      scope: "openid",
     });
     window.location.href = `${env.value.OIDC_LOGIN_URL}?${params}`;
   };

@@ -11,7 +11,6 @@ import {
 import type { Route } from "./+types/root";
 import "./app.css";
 import { useTranslation } from "react-i18next";
-import i18next from "./i18n/i18n.server";
 import { useChangeLanguage } from "remix-i18next/react";
 import { getClientEnv } from "./env/env";
 
@@ -29,22 +28,18 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export async function loader({ request }: Route.LoaderArgs) {
-  let locale = await i18next.getLocale(request);
   const env = getClientEnv();
   if(env.isErr()) {
     throw new Error(env.error.join("\n"));
   }
-  return Response.json({ locale, env: env.value });
+  return Response.json({ env: env.value });
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const { locale, env } = useLoaderData<typeof loader>();
-  let { i18n } = useTranslation();
-
-  useChangeLanguage(locale);
+  const { env } = useLoaderData<typeof loader>();
 
   return (
-    <html lang={locale} dir={i18n.dir()}>
+    <html>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />

@@ -1,8 +1,8 @@
-import type { Route } from "../+types/refresh-token.page";
+import type { Route } from "./+types/refresh-token.page";
 import { getServerEnv } from "~/env/env";
 import { computeSetCookieHeader } from "~/authentication/oauth/cookies";
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function action({ request }: Route.ActionArgs) {
   const env = getServerEnv();
   if (env.isErr()) {
     return new Response("Internal Server Error - no env", { status: 500 });

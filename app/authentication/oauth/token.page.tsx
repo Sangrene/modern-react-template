@@ -1,9 +1,10 @@
-import type { Route } from "../+types/token.page";
+import type { Route } from "./+types/token.page";
 import { getServerEnv } from "~/env/env";
 import { computeSetCookieHeader } from "~/authentication/oauth/cookies";
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function action({ request }: Route.ActionArgs) {
   const env = getServerEnv();
+  console.log("test");
   if (env.isErr()) {
     return new Response("Internal Server Error - no env", { status: 500 });
   }
@@ -20,8 +21,9 @@ export async function loader({ request }: Route.LoaderArgs) {
     code: authCode,
     client_id: env.value.OIDC_CLIENT_ID,
     client_secret: env.value.OIDC_CLIENT_SECRET,
+    redirect_uri: env.value.BASE_URL + "/oidc/callback",
     grant_type: "authorization_code",
-    scope: "offline_access",
+    scope: "openid",
   });
   try {
     const response = await fetch(`${env.value.OIDC_TOKEN_URL}?${params}`, {
@@ -55,17 +57,17 @@ export async function loader({ request }: Route.LoaderArgs) {
     } else {
       console.error(
         new Error(
-          "Fusion authorization error, no access token in response, body: " +
+          "Authorization error, no access token in response, body: " +
             JSON.stringify(body)
         )
       );
       return new Response(
-        "Fusion authorization error, no access token in response",
+        "Authorization error, no access token in response",
         { status: 500 }
       );
     }
   } catch (e) {
     console.error(e);
-    return new Response("Fusion authorization error", { status: 500 });
+    return new Response("Authorization error", { status: 500 });
   }
 }

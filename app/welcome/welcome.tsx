@@ -7,14 +7,11 @@ import { httpClient } from "~/http/httpClient";
 import { useEffect } from "react";
 
 export function Welcome() {
-  const { t } = useTranslation();
-  // const { redirectToOidcProvider } = oidcAuth({
-  //   httpClient: httpClient,
-  //   localKvStore: localStore,
-  // });
-  useEffect(() => {
-    console.log("Welcome component mounted on client side!");
-  }, []);
+  const { redirectToOidcProvider } = oidcAuth({
+    httpClient: httpClient,
+    localKvStore: localStore,
+  });
+
   return (
     <main className="flex items-center justify-center pt-16 pb-4">
       <div className="flex-1 flex flex-col items-center gap-16 min-h-0">
@@ -35,15 +32,16 @@ export function Welcome() {
         <div className="max-w-[300px] w-full space-y-6 px-4">
           <nav className="rounded-3xl border border-gray-200 p-6 dark:border-gray-700 space-y-4">
             <p className="leading-6 text-gray-700 dark:text-gray-200 text-center">
-              {t("welcome")}
+              {"Welcome"}
             </p>
           </nav>
           <div>
             <p>Testing if React is working...</p>
             <button
               onClick={() => {
-                console.log("Simple button clicked!");
-                alert("Simple button works!");
+                redirectToOidcProvider()?.mapErr((error) => {
+                  console.error(error);
+                });
               }}
               style={{ 
                 backgroundColor: 'green', 
