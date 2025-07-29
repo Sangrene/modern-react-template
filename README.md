@@ -47,3 +47,8 @@ The app exposes endpoints related to this authentication flow :
 The translation of the app is done through the use of the `useTranslation` hook from https://github.com/i18next/react-i18next.
 
 Translations are stored in public/locales/{lng}/{namespace}.json.
+
+## Environment variables
+Environment variables are loaded at runtime. They can be accessed by the `getClientEnv` and `getServerEnv` variables. The available variables can be set using [Arktype](https://arktype.io/) schema validation. 
+
+Environment returned by `getClientEnv` will be exposed to the frontend and thus never contain any secret.
