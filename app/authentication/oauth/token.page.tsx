@@ -4,7 +4,6 @@ import { computeSetCookieHeader } from "~/authentication/oauth/cookies";
 
 export async function action({ request }: Route.ActionArgs) {
   const env = getServerEnv();
-  console.log("test");
   if (env.isErr()) {
     return new Response("Internal Server Error - no env", { status: 500 });
   }

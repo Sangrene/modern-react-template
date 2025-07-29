@@ -10,9 +10,12 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
-import { useTranslation } from "react-i18next";
-import { useChangeLanguage } from "remix-i18next/react";
 import { getClientEnv } from "./env/env";
+import { getLocale, i18nextMiddleware } from "./i18n/i18nextMiddleware";
+import { useChangeLanguage } from "remix-i18next/react";
+import { useTranslation } from "react-i18next";
+
+export const unstable_middleware = [i18nextMiddleware];
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -27,19 +30,19 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader({ context }: Route.LoaderArgs) {
   const env = getClientEnv();
-  if(env.isErr()) {
+  if (env.isErr()) {
     throw new Error(env.error.join("\n"));
   }
-  return Response.json({ env: env.value });
+  const locale = getLocale(context);
+  return Response.json({ env: env.value, locale });
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const { env } = useLoaderData<typeof loader>();
-
+  const { env, locale } = useLoaderData<typeof loader>();
   return (
-    <html>
+    <html lang={locale}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -60,7 +63,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function App() {
+export default function App({ loaderData }: Route.ComponentProps) {
+  useChangeLanguage(loaderData.locale);
   return <Outlet />;
 }
 

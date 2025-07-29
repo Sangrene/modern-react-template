@@ -32,7 +32,11 @@ export const oidcAuth = ({
   localKvStore: PersistentKvStore;
   httpClient: HTTPClient;
 }) => {
-  const redirectToOidcProvider = () => {
+  const handleRedirectToOidcProvider = <Redirect extends boolean>({
+    dontRedirect,
+  }: {
+    dontRedirect?: Redirect;
+  } = {}) => {
     const env = getClientEnv();
     if (env.isErr()) {
       return err(env.error);
@@ -46,7 +50,12 @@ export const oidcAuth = ({
       state,
       scope: "openid",
     });
-    window.location.href = `${env.value.OIDC_LOGIN_URL}?${params}`;
+    const redirectUrl = `${env.value.OIDC_LOGIN_URL}?${params}`;
+    if (!dontRedirect) {
+      window.location.href = redirectUrl;
+    } else {
+      return ok(redirectUrl);
+    }
   };
 
   const storeRefreshTokenAndExpiration = (
@@ -184,7 +193,7 @@ export const oidcAuth = ({
   };
 
   return {
-    redirectToOidcProvider,
+    redirectToOidcProvider: handleRedirectToOidcProvider,
     handleOidcCallback,
     handleRefreshAccessTokenIfNeeded,
   };

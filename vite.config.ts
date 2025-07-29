@@ -9,6 +9,7 @@ export default defineConfig({
   server: {
     port: 3000,
   },
+  // @ts-ignore
   test: {
     environment: "happy-dom",
   },
