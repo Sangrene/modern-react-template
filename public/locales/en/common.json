@@ -1,5 +1,6 @@
 {
   "welcome": "Welcome to the app",
+  "login": "Login",
   "meta": {
     "title": "New React Router App",
     "description": "Welcome to React Router!"

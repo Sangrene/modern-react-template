@@ -1,5 +1,5 @@
 import { serialize } from "cookie";
-import { getClientEnv } from "~/env/env";
+import { getClientEnv } from "src/shared/env/env";
 import { ok } from "neverthrow";
 
 export const computeSetCookieHeader = (token: string, expiresIt?: boolean) => {

@@ -1,39 +1,39 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { createMemoryStore } from "~/persistentKvStore/inMemoryKvStore";
+import { createMemoryStore } from "src/shared/persistentKvStore/inMemoryKvStore";
 import {
   oidcAuth,
   OAUTH_STATE_KEY,
   REFRESH_TOKEN_KEY,
   TokenResponse,
 } from "./oidcAuth";
-import type { HTTPClient } from "~/http/httpClient";
-import { ServerEnvSchema } from "~/env/env";
-import { err, Err, errAsync, ok, okAsync, ResultAsync } from "neverthrow";
+import type { HTTPClient } from "src/shared/httpClient/httpClient";
+import { ClientEnvSchema, ServerEnvSchema } from "src/shared/env/env";
+import { err, errAsync, ok, okAsync, ResultAsync } from "neverthrow";
 import type { Type } from "arktype";
 
+const clientEnv: typeof ClientEnvSchema.infer = {
+  OIDC_CLIENT_ID: "test",
+  OIDC_LOGIN_URL: "http://oidc.com/login",
+  BASE_URL: "http://localhost:3000",
+  APPLICATION_NAME: "test",
+  DOMAIN: "test",
+};
+const serverEnv: typeof ServerEnvSchema.infer = {
+  OIDC_CLIENT_ID: "test",
+  OIDC_LOGIN_URL: "http://oidc.com/login",
+  OIDC_CLIENT_SECRET: "secretTest",
+  BASE_URL: "http://localhost:3000",
+  APPLICATION_NAME: "test",
+  DOMAIN: "test",
+  OIDC_TOKEN_URL: "http://oidc.com/authorize",
+};
 describe("OIDC Auth", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    vi.mock("~/env/env", () => ({
-      getClientEnv: () =>
-        ok({
-          OIDC_CLIENT_ID: "test",
-          OIDC_LOGIN_URL: "http://oidc.com/login",
-          BASE_URL: "http://localhost:3000",
-          APPLICATION_NAME: "test",
-          DOMAIN: "test",
-        }),
-      getServerEnv: () =>
-        ok({
-          OIDC_CLIENT_ID: "test",
-          OIDC_CLIENT_SECRET: "test",
-          OIDC_LOGIN_URL: "http://oidc.com/login",
-          BASE_URL: "http://localhost:3000",
-          APPLICATION_NAME: "test",
-          DOMAIN: "test",
-          OIDC_TOKEN_URL: "http://localhost:3000/test",
-        }),
+    vi.mock("src/shared/env/env", () => ({
+      getClientEnv: () => ok(clientEnv),
+      getServerEnv: () => ok(serverEnv),
     }));
   });
   describe("redirectToOidcProvider", () => {
@@ -43,13 +43,21 @@ describe("OIDC Auth", () => {
     };
     it("should redirect to the OIDC provider, with the correct parameters", () => {
       const inMemoryStore = createMemoryStore();
-      const { redirectToOidcProvider } = oidcAuth({
-        localKvStore: inMemoryStore,
-        httpClient: mockHttpClient,
-      });
-      redirectToOidcProvider();
-      expect(window.location.href).toContain("http://oidc.com/login?");
-      const url = new URL(window.location.href);
+      const { handleRedirectToOidcProvider: redirectToOidcProvider } = oidcAuth(
+        {
+          localKvStore: inMemoryStore,
+          httpClient: mockHttpClient,
+        }
+      );
+      const result = redirectToOidcProvider({ dontRedirect: true })
+        .map((url) => new URL(url))
+        .mapErr((e) => e.join("\n"));
+      if (result.isErr()) {
+        console.error(result.error);
+        throw result.error;
+      }
+      const url = result.value;
+      expect(url.href).toContain("http://oidc.com/login?");
       expect(url.searchParams.get("client_id")).toBe("test");
       expect(url.searchParams.get("response_type")).toBe("code");
       expect(url.searchParams.get("redirect_uri")).toBe(
@@ -120,7 +128,7 @@ describe("OIDC Auth", () => {
       });
       inMemoryStore.setItem(OAUTH_STATE_KEY, "state");
       const result = await handleOidcCallback("code", "state");
-      expect(result).toStrictEqual(ok(true));
+      expect(result.isOk()).toBe(true);
       expect(inMemoryStore.getItem(REFRESH_TOKEN_KEY)).toStrictEqual(
         ok("refresh_token")
       );
@@ -144,7 +152,7 @@ describe("OIDC Auth", () => {
       const {
         handleRefreshAccessTokenIfNeeded,
         handleOidcCallback,
-        redirectToOidcProvider,
+        handleRedirectToOidcProvider: redirectToOidcProvider,
       } = oidcAuth({
         localKvStore: inMemoryStore,
         httpClient: mockHttpClient,
@@ -180,7 +188,7 @@ describe("OIDC Auth", () => {
       const {
         handleRefreshAccessTokenIfNeeded,
         handleOidcCallback,
-        redirectToOidcProvider,
+        handleRedirectToOidcProvider: redirectToOidcProvider,
       } = oidcAuth({
         localKvStore: inMemoryStore,
         httpClient: mockHttpClient,

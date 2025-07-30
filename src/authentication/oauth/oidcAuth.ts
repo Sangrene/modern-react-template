@@ -1,8 +1,8 @@
 import { err, errAsync, ok, okAsync, Result, ResultAsync } from "neverthrow";
-import { getClientEnv } from "~/env/env";
-import { type PersistentKvStore } from "~/persistentKvStore/persistentKvStore";
-import { type } from "arktype";
-import { type HTTPClient } from "~/http/httpClient";
+import { getClientEnv } from "src/shared/env/env";
+import { type PersistentKvStore } from "src/shared/persistentKvStore/persistentKvStore";
+import { ArkErrors, type } from "arktype";
+import { type HTTPClient } from "src/shared/httpClient/httpClient";
 
 export const OAUTH_STATE_KEY = "oauth_state";
 export const REFRESH_TOKEN_KEY = "refresh_token";
@@ -32,11 +32,14 @@ export const oidcAuth = ({
   localKvStore: PersistentKvStore;
   httpClient: HTTPClient;
 }) => {
-  const handleRedirectToOidcProvider = <Redirect extends boolean>({
+  const handleRedirectToOidcProvider = <DontRedirect extends boolean>({
     dontRedirect,
   }: {
-    dontRedirect?: Redirect;
-  } = {}) => {
+    dontRedirect?: DontRedirect;
+  } = {}): Result<
+    DontRedirect extends true ? string : undefined,
+    ArkErrors
+  > => {
     const env = getClientEnv();
     if (env.isErr()) {
       return err(env.error);
@@ -48,13 +51,14 @@ export const oidcAuth = ({
       response_type: "code",
       redirect_uri: env.value.BASE_URL + "/oidc/callback",
       state,
-      scope: "openid",
+      scope: "offline_access",
     });
     const redirectUrl = `${env.value.OIDC_LOGIN_URL}?${params}`;
     if (!dontRedirect) {
       window.location.href = redirectUrl;
+      return ok(undefined as DontRedirect extends true ? string : undefined);
     } else {
-      return ok(redirectUrl);
+      return ok(redirectUrl as DontRedirect extends true ? string : undefined);
     }
   };
 
@@ -157,15 +161,13 @@ export const oidcAuth = ({
         }
         return ok(true);
       })
-      .andThen(() => {
-        return localKvStore.removeItem(OAUTH_STATE_KEY);
-      })
       .asyncAndThen(() => {
         return ResultAsync.fromPromise(
           sendAccessTokenRequest(code),
           (error) => error
         );
       })
+
       .andThen((result) => {
         return result.match(
           ({ expires_in, refresh_token }) => {
@@ -175,6 +177,9 @@ export const oidcAuth = ({
             return err(error);
           }
         );
+      })
+      .andThen(() => {
+        return localKvStore.removeItem(OAUTH_STATE_KEY);
       });
   };
 
@@ -193,7 +198,7 @@ export const oidcAuth = ({
   };
 
   return {
-    redirectToOidcProvider: handleRedirectToOidcProvider,
+    handleRedirectToOidcProvider,
     handleOidcCallback,
     handleRefreshAccessTokenIfNeeded,
   };

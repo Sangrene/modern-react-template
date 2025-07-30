@@ -1,4 +1,4 @@
-import { getClientEnv } from "~/env/env";
+import { getClientEnv } from "src/shared/env/env";
 import { ok, err, Result } from "neverthrow";
 import type { PersistentKvStore } from "./persistentKvStore";
 
@@ -7,11 +7,11 @@ import type { PersistentKvStore } from "./persistentKvStore";
 const getItem = (key: string) => {
   const env = getClientEnv();
   if(env.isErr()) {
-    return err(env.error);
+    return err(new Error(env.error.join("\n")));
   }
   const oauthState = localStorage.getItem(`${env.value.APPLICATION_NAME}:${key}`);
   if (!oauthState) {
-    return ok(null);
+    return err(new Error(`Key '${key}' not found`));
   }
   return ok(oauthState);
 };
@@ -20,7 +20,7 @@ const getItem = (key: string) => {
 const setItem = (key: string, value: string) => {
   const env = getClientEnv();
   if(env.isErr()) {
-    return err(env.error);
+    return err(new Error(env.error.join("\n")));
   }
   localStorage.setItem(`${env.value.APPLICATION_NAME}:${key}`, value);
   return ok();
@@ -31,7 +31,7 @@ const setItem = (key: string, value: string) => {
 const removeItem = (key: string) => {
   const env = getClientEnv();
   if(env.isErr()) {
-    return err(env.error);
+    return err(new Error(env.error.join("\n")));
   }
   localStorage.removeItem(`${env.value.APPLICATION_NAME}:${key}`);
   return ok();
@@ -42,5 +42,5 @@ export const localStore = {
   getItem,
   setItem,
   removeItem,
-} as PersistentKvStore;
+} satisfies PersistentKvStore;
 

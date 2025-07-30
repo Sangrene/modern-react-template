@@ -1,17 +1,10 @@
-import { oidcAuth } from "~/authentication/oauth/oidcAuth";
-
 import { useTranslation } from "react-i18next";
-import { localStore } from "~/persistentKvStore/localStorageKvStore";
-import { httpClient } from "~/http/httpClient";
 import { useEffect, useState } from "react";
+import { LoginButton } from "src/authentication/ui/LoginButton";
 
 export function Welcome() {
   const { t } = useTranslation();
   const [isLoaded, setIsLoaded] = useState(false);
-  // const { redirectToOidcProvider } = oidcAuth({
-  //   httpClient: httpClient,
-  //   localKvStore: localStore,
-  // });
 
   useEffect(() => {
     setIsLoaded(true);
@@ -26,6 +19,9 @@ export function Welcome() {
             <p className="leading-6 text-gray-700 dark:text-gray-200 text-center">
               {t("welcome")}
             </p>
+            <div className="mt-4">
+              <LoginButton />
+            </div>
           </nav>
           <div>
             <p>Testing if React is working...</p>

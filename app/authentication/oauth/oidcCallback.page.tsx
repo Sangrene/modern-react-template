@@ -1,8 +1,8 @@
 import type { Route } from "./+types/oidcCallback.page";
-import { oidcAuth } from "~/authentication/oauth/oidcAuth";
+import { oidcAuth } from "src/authentication/oauth/oidcAuth";
 import { redirect } from "react-router";
-import { localStore } from "~/persistentKvStore/localStorageKvStore";
-import { httpClient } from "~/http/httpClient";
+import { localStore } from "src/shared/persistentKvStore/localStorageKvStore";
+import { httpClient } from "src/shared/httpClient/httpClient";
 
 export async function clientLoader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);

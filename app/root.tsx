@@ -10,7 +10,7 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
-import { getClientEnv } from "./env/env";
+import { getClientEnv } from "../src/shared/env/env";
 import { getLocale, i18nextMiddleware } from "./i18n/i18nextMiddleware";
 import { useChangeLanguage } from "remix-i18next/react";
 import { useTranslation } from "react-i18next";
