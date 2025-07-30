@@ -1,5 +1,5 @@
 import type { Route } from "./+types/oidcCallback.page";
-import { oidcAuth } from "src/authentication/oauth/oidcAuth";
+import { oidcAuth } from "src/authentication/oauth/oidcAuth.core";
 import { redirect } from "react-router";
 import { localStore } from "src/shared/persistentKvStore/localStorageKvStore";
 import { httpClient } from "src/shared/httpClient/httpClient";

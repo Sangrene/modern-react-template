@@ -47,7 +47,6 @@ export async function action({ request }: Route.ActionArgs) {
       });
     })
     .andThen((body) => {
-      console.log("body", body);
       if (!body.access_token) return err("No access token in response");
       if (!body.expires_in) return err("No expires-in in response");
       if (!body.refresh_token) return err("No refresh token in response");

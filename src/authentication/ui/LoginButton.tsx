@@ -1,4 +1,4 @@
-import { oidcAuth } from "src/authentication/oauth/oidcAuth";
+import { oidcAuth } from "src/authentication/oauth/oidcAuth.core";
 import { localStore } from "src/shared/persistentKvStore/localStorageKvStore";
 import { httpClient } from "src/shared/httpClient/httpClient";
 import { useTranslation } from "react-i18next";

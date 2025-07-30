@@ -5,7 +5,7 @@ import {
   OAUTH_STATE_KEY,
   REFRESH_TOKEN_KEY,
   TokenResponse,
-} from "./oidcAuth";
+} from "./oidcAuth.core";
 import type { HTTPClient } from "src/shared/httpClient/httpClient";
 import { ClientEnvSchema, ServerEnvSchema } from "src/shared/env/env";
 import { err, errAsync, ok, okAsync, ResultAsync } from "neverthrow";
@@ -58,9 +58,9 @@ describe("OIDC Auth", () => {
       }
       const url = result.value;
       expect(url.href).toContain("http://oidc.com/login?");
-      expect(url.searchParams.get("client_id")).toBe("test");
-      expect(url.searchParams.get("response_type")).toBe("code");
-      expect(url.searchParams.get("redirect_uri")).toBe(
+      expect(url.searchParams.get("client_id")).toEqual("test");
+      expect(url.searchParams.get("response_type")).toEqual("code");
+      expect(url.searchParams.get("redirect_uri")).toEqual(
         "http://localhost:3000/oidc/callback"
       );
       expect(url.searchParams.get("state")).toBeDefined();
