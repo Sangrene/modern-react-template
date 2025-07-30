@@ -1,5 +1,6 @@
 import { err, errAsync, ok, okAsync, Result, ResultAsync } from "neverthrow";
 import { Type, type } from "arktype";
+import { validateType } from "../schema/validateType";
 
 export interface HTTPClient {
   post: <T extends unknown>(p: {
@@ -42,13 +43,7 @@ export const httpClient: HTTPClient = {
       .andThen((response) =>
         ResultAsync.fromPromise(response.json(), (error) => error as Error)
       )
-      .andThen((json) => {
-        const result = responseType(json);
-        if (result instanceof type.errors) {
-          return err(new Error("Invalid response: " + result.summary));
-        }
-        return ok(result as T);
-      });
+      .andThen((json) => validateType(responseType, json));
   },
   get: <T>({
     url,
@@ -73,12 +68,6 @@ export const httpClient: HTTPClient = {
       .andThen((response) =>
         ResultAsync.fromPromise(response.json(), (error) => error as Error)
       )
-      .andThen((json) => {
-        const result = responseType(json);
-        if (result instanceof type.errors) {
-          return err(new Error("Invalid response: " + result.summary));
-        }
-        return ok(result as T);
-      });
+      .andThen((json) => validateType(responseType, json));
   },
 };

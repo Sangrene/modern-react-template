@@ -11,6 +11,7 @@ describe("UserCore", () => {
   let userCore: ReturnType<typeof createUserCore>;
 
   beforeEach(() => {
+    vi.resetAllMocks();
     userStore = new UserStore();
     userRepository = createFakeUserRepository();
     userCore = createUserCore({ userStore, userRepository });
@@ -73,6 +74,126 @@ describe("UserCore", () => {
         user: null,
         status: "loading",
         error: null,
+      });
+    });
+
+    describe("updateCurrentUser", () => {
+      beforeEach(async () => {
+        // Set up a current user first
+        await userCore.setCurrentUser();
+      });
+
+      it("should set loading state before updating", async () => {
+        // Arrange
+        const updateData = { name: "Jane Doe" };
+        let loadingStateCaptured = false;
+        const originalUpdateCurrentUser = userRepository.updateCurrentUser;
+        
+        userRepository.updateCurrentUser = vi.fn().mockImplementation(() => {
+          // Capture the state right before the repository call
+          loadingStateCaptured = userStore.currentUserState.status === "loading";
+          return originalUpdateCurrentUser(updateData);
+        });
+
+        // Act
+        await userCore.updateCurrentUser(updateData);
+
+        // Assert
+        expect(loadingStateCaptured).toBe(true);
+        expect(userRepository.updateCurrentUser).toHaveBeenCalledWith(updateData);
+      });
+
+      it("should reject invalid input", async () => {
+        // Arrange
+        const invalidInput = { name: "Jo" }; // Less than 3 characters
+
+        // Act
+        const result = await userCore.updateCurrentUser(invalidInput);
+
+        // Assert
+        expect(result.isErr()).toBe(true);
+        if (result.isErr()) {
+          expect(result.error.message).toContain("name");
+        }
+      });
+
+      it("should perform optimistic update", async () => {
+        // Arrange
+        const updateData = { name: "Jane Doe" };
+        const expectedOptimisticUser = {
+          id: "fake-user-id-123",
+          name: "Jane Doe",
+          email: "john.doe@example.com",
+        };
+
+        // Mock a slow repository call to see the optimistic update
+        userRepository.updateCurrentUser = vi.fn().mockReturnValue(
+          ResultAsync.fromPromise(
+            new Promise((resolve) => {
+              setTimeout(() => {
+                resolve(expectedOptimisticUser);
+              }, 100);
+            }),
+            () => new Error("Network error")
+          )
+        );
+
+        // Act
+        const updatePromise = userCore.updateCurrentUser(updateData);
+        
+        // Check optimistic update immediately
+        expect(userStore.currentUserState).toStrictEqual({
+          user: expectedOptimisticUser,
+          status: "loading",
+          error: null,
+        });
+
+        // Wait for the actual update to complete
+        await updatePromise;
+
+        // Assert final state
+        expect(userStore.currentUserState).toStrictEqual({
+          user: expectedOptimisticUser,
+          status: "success",
+          error: null,
+        });
+      });
+
+      it("should revert optimistic update on error", async () => {
+        // Arrange
+        const updateData = { name: "Jane Doe" };
+        const originalState = userStore.currentUserState;
+        const mockError = new Error("Network error");
+
+        userRepository.updateCurrentUser = vi.fn().mockReturnValue(
+          errAsync(mockError)
+        );
+
+        // Act
+        const result = await userCore.updateCurrentUser(updateData);
+
+        // Assert
+        expect(result.isErr()).toBe(true);
+        expect(userStore.currentUserState).toStrictEqual(originalState);
+      });
+
+      it("should reject update when no current user is set", async () => {
+        // Arrange
+        const updateData = { name: "Jane Doe" };
+        userStore.setCurrentUserState({
+          user: null,
+          status: "idle",
+          error: null,
+        });
+
+        // Act
+        const result = await userCore.updateCurrentUser(updateData);
+
+        // Assert
+        expect(result.isErr()).toBe(true);
+        if (result.isErr()) {
+          expect(result.error.message).toBe("Current user not set");
+        }
       });
     });
   });
