@@ -7,6 +7,7 @@ This template is meant to provide a base to develop new web apps. It showcases s
 - 🏗️ Hexagonal architecture
 - 📐 SOLID
 - 🔧 Environment variables management
+- ⚠️ Explicit error handling
 
 ## OpenID Connect Authentication
 This pattern employ the commonly used OAuth2 protocol, implement the Authorization Code Grant (see https://datatracker.ietf.org/doc/html/rfc6749#section-4.1). It is secured because of the use of React Router server actions, which are doing the requests to the identity provider. Neither the access token nor the oauth secrets are exposed to the frontend.
@@ -53,6 +54,22 @@ Environment variables are loaded at runtime. They can be accessed by the `getCli
 
 Environment returned by `getClientEnv` will be exposed to the frontend and thus never contain any secret.
 
+## Explicit Error Handling with neverthrow
+This template uses [neverthrow](https://github.com/supermacro/neverthrow) for functional programming and explicit error handling. neverthrow provides a `Result<T, E>` type that forces developers to handle both success and error cases explicitly, eliminating runtime exceptions and making error handling more predictable.
+
+### Key Benefits
+- **No runtime exceptions**: All errors are handled explicitly through the Result type
+- **Type safety**: TypeScript ensures all error cases are handled
+- **Functional programming**: Promotes immutable data and pure functions
+- **Predictable error handling**: Errors are part of the function signature
+
+### Best Practices
+- **Always handle both success and error cases** using `.match()`, `.map()`, or `.mapErr()`
+- **Use descriptive error messages** that help with debugging
+- **Chain operations** using `.andThen()` for sequential operations
+- **Transform errors** using `.mapErr()` to provide context
+- **Test both success and error paths** in your unit tests
+
 ## Hexagonal Architecture
 __/src__ directory contains all the app.
 
@@ -93,4 +110,44 @@ The __store__ represent the internal, reactive, app state. It is injected in the
 Each domain has its own store. A feature can have its own store if the state management is complex enough.
 
 ### Repository
-A repository is
+A repository is the persistent data access component. It can query and mutate data, usually by adding an abstraction layer over HTTP / GraphQL / gRPC / SQL / noSQL etc. In a frontend app, it's usually the component that lies between the core and the backend API.
+
+Example
+```typescript
+import { type HTTPClient } from "src/shared/httpClient/httpClient";
+import { CurrentUserSchema } from "./user.model";
+import { UpdateCurrentUserInputSchema } from "./features/updateCurrentUser/updateCurrentUser.core";
+
+export type UserRepository = ReturnType<typeof createUserRepository>;
+
+export const createUserRepository = ({
+  httpClient,
+}: {
+  httpClient: HTTPClient;
+}) => {
+  const queryCurrentUser = () => {
+    return httpClient.get({
+      url: "/api/user/current",
+      responseType: CurrentUserSchema,
+    });
+  };
+
+  const updateCurrentUser = (
+    user: typeof UpdateCurrentUserInputSchema.infer
+  ) => {
+    return httpClient.post({
+      url: "/api/user/current",
+      body: user,
+      responseType: CurrentUserSchema,
+    });
+  };
+
+  return {
+    queryCurrentUser,
+    updateCurrentUser,
+  };
+};
+```
+
+### UI components
+Features are usually linked to UI components. 
