@@ -1,7 +1,6 @@
 import { type HTTPClient } from "src/shared/httpClient/httpClient";
 import { CurrentUserSchema } from "./user.model";
-import { ResultAsync } from "neverthrow";
-import { UpdateCurrentUserInputSchema } from "./user.input";
+import { UpdateCurrentUserInputSchema } from "./features/updateCurrentUser/updateCurrentUser.core";
 
 export type UserRepository = ReturnType<typeof createUserRepository>;
 

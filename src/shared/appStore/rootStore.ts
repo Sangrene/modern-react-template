@@ -1,9 +1,9 @@
-import { UserStore } from "src/user/user.store";
+import type { UserStoreInterface } from "src/user/user.store";
 
 export class RootStore {
-  userStore: UserStore;
+  userStore: UserStoreInterface;
 
-  constructor({ userStore }: { userStore: UserStore }) {
+  constructor({ userStore }: { userStore: UserStoreInterface }) {
     this.userStore = userStore;
   }
 }

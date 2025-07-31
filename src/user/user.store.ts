@@ -9,7 +9,12 @@ export type CurrentUserState = {
   error: Error | null;
 };
 
-export class UserStore {
+export interface UserStoreInterface {
+  currentUserState: CurrentUserState;
+  setCurrentUserState(state: CurrentUserState): void;
+}
+
+export class UserStore implements UserStoreInterface {
   @observable accessor currentUserState: CurrentUserState = {
     user: null,
     status: "idle",

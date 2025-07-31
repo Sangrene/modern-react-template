@@ -52,3 +52,45 @@ Translations are stored in public/locales/{lng}/{namespace}.json.
 Environment variables are loaded at runtime. They can be accessed by the `getClientEnv` and `getServerEnv` variables. The available variables can be set using [Arktype](https://arktype.io/) schema validation. 
 
 Environment returned by `getClientEnv` will be exposed to the frontend and thus never contain any secret.
+
+## Hexagonal Architecture
+__/src__ directory contains all the app.
+
+Features sit in their __/src/{domain}__ dir. 
+
+![Hexagonal architecture](./hexagonal_architecture.png)
+
+### Core (or Usecase)
+The __core__ doesn't depend on anything besides model, and instead rely on dependency injection to get the needed dependencies. The __core__ is where the business logic happens. Decoupled from virtually anything, it is easily unit-testable by injecting fake dependencies. One __core__ per feature and a core per domain, that aggregate features cores.
+
+Example :
+```typescript
+import type { UserStoreInterface } from "./user.store";
+import type { UserRepository } from "./user.repository";
+import { createQueryCurrentUserCore } from "./features/queryCurrentUser/queryCurrentUser.core";
+import { createUpdateCurrentUserCore } from "./features/updateCurrentUser/updateCurrentUser.core";
+
+export interface UserCoreArgs {
+  userStore: UserStoreInterface;
+  userRepository: UserRepository;
+}
+export const createUserCore = (args: UserCoreArgs) => {
+  const updateCurrentUser = createUpdateCurrentUserCore(args);
+  const queryCurrentUser = createQueryCurrentUserCore(args);
+
+  return {
+    queryCurrentUser,
+    updateCurrentUser,
+  };
+};
+```
+Each feature core has a dedicated test file, unless the domain core is small enough to have a domain core test file.
+
+
+### Store
+The __store__ represent the internal, reactive, app state. It is injected in the core and exposes actions and observables. When a feature updates the internal app state, the associated core will use actions to manipulate the stored state.
+
+Each domain has its own store. A feature can have its own store if the state management is complex enough.
+
+### Repository
+A repository is

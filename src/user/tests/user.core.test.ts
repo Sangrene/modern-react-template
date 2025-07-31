@@ -27,7 +27,7 @@ describe("UserCore", () => {
       };
 
       // Act
-      const result = await userCore.setCurrentUser();
+      const result = await userCore.queryCurrentUser();
 
       // Assert
       expect(result.isOk()).toBe(true);
@@ -45,7 +45,7 @@ describe("UserCore", () => {
         .fn()
         .mockReturnValue(errAsync(mockError));
 
-      const result = await userCore.setCurrentUser();
+      const result = await userCore.queryCurrentUser();
 
       expect(result.isErr()).toBe(true);
       expect(userStore.currentUserState).toStrictEqual({
@@ -68,7 +68,7 @@ describe("UserCore", () => {
         )
       );
 
-      userCore.setCurrentUser();
+      userCore.queryCurrentUser();
 
       expect(userStore.currentUserState).toStrictEqual({
         user: null,
@@ -80,7 +80,7 @@ describe("UserCore", () => {
   describe("updateCurrentUser", () => {
     beforeEach(async () => {
       // Set up a current user first
-      await userCore.setCurrentUser();
+      await userCore.queryCurrentUser();
     });
 
     it("should set loading state before updating", async () => {
