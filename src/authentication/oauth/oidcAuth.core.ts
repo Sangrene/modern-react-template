@@ -3,6 +3,8 @@ import { getClientEnv } from "src/shared/env/env";
 import { type PersistentKvStore } from "src/shared/persistentKvStore/persistentKvStore";
 import { ArkErrors, type } from "arktype";
 import { type HTTPClient } from "src/shared/httpClient/httpClient";
+import { parse } from "cookie";
+import { ACCESS_TOKEN_COOKIE_NAME } from "./cookies";
 
 export const OAUTH_STATE_KEY = "oauth_state";
 export const REFRESH_TOKEN_KEY = "refresh_token";
@@ -51,7 +53,7 @@ export const oidcAuth = ({
       response_type: "code",
       redirect_uri: env.value.BASE_URL + "/oidc/callback",
       state,
-      scope: "offline_access",
+      scope: "openid offline_access",
     });
     const redirectUrl = `${env.value.OIDC_LOGIN_URL}?${params}`;
     if (!dontRedirect) {
@@ -167,7 +169,6 @@ export const oidcAuth = ({
           (error) => error
         );
       })
-
       .andThen((result) => {
         return result.match(
           ({ expires_in, refresh_token }) => {

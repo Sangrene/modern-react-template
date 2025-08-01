@@ -1,7 +1,7 @@
 import { ResultAsync, okAsync } from "neverthrow";
 import { type UserRepository } from "../user.repository";
 import { CurrentUserSchema } from "../user.model";
-import { UpdateCurrentUserInputSchema } from "../user.input";
+import { UpdateCurrentUserInputSchema } from "../features/updateCurrentUser/updateCurrentUser.core";
 
 // Fixture user data
 const fixtureUser: typeof CurrentUserSchema.infer = {

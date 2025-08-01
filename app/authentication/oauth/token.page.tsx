@@ -19,20 +19,21 @@ export async function action({ request }: Route.ActionArgs) {
       return Result.combine([ok(authCode), getServerEnv()]);
     })
     .andThen(([authCode, env]) => {
-      const params = new URLSearchParams({
+      const params = {
         code: authCode,
         client_id: env.OIDC_CLIENT_ID,
         client_secret: env.OIDC_CLIENT_SECRET,
-        redirect_uri: env.BASE_URL + "/oidc/callback",
         grant_type: "authorization_code",
-        scope: "offline_access",
-      });
+        scope: "openid offline_access",
+        redirect_uri: env.BASE_URL + "/oidc/callback",
+      };
       return ResultAsync.fromPromise(
-        fetch(`${env.OIDC_TOKEN_URL}?${params}`, {
+        fetch(`${env.OIDC_TOKEN_URL}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",
           },
+          body: new URLSearchParams(params),
         }),
         (e) => {
           console.error(e);
@@ -47,9 +48,12 @@ export async function action({ request }: Route.ActionArgs) {
       });
     })
     .andThen((body) => {
-      if (!body.access_token) return err("No access token in response");
-      if (!body.expires_in) return err("No expires-in in response");
-      if (!body.refresh_token) return err("No refresh token in response");
+      if (!body.access_token)
+        return err("No access token in response" + JSON.stringify(body));
+      if (!body.expires_in)
+        return err("No expires-in in response" + JSON.stringify(body));
+      if (!body.refresh_token)
+        return err("No refresh token in response" + JSON.stringify(body));
       return Result.combine([
         computeSetCookieHeader(body.access_token),
         ok({

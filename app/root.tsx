@@ -13,7 +13,7 @@ import "./app.css";
 import { getClientEnv } from "../src/shared/env/env";
 import { getLocale, i18nextMiddleware } from "./i18n/i18nextMiddleware";
 import { useChangeLanguage } from "remix-i18next/react";
-import { useTranslation } from "react-i18next";
+import { AppProvider } from "src/shared/app/app.provider";
 
 export const unstable_middleware = [i18nextMiddleware];
 
@@ -55,7 +55,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         />
       </head>
       <body>
-        {children}
+        <AppProvider>{children}</AppProvider>
         <ScrollRestoration />
         <Scripts />
       </body>

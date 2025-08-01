@@ -9,6 +9,11 @@ export default defineConfig({
   server: {
     port: 3000,
   },
+  esbuild: {
+    supported: {
+      decorators: false,
+    },
+  },
   // @ts-ignore
   test: {
     environment: "happy-dom",

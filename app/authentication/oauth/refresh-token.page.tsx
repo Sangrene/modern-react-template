@@ -28,11 +28,12 @@ export async function action({ request }: Route.ActionArgs) {
         refresh_token: refreshToken,
       });
       return ResultAsync.fromPromise(
-        fetch(`${env.OIDC_TOKEN_URL}?${params}`, {
+        fetch(`${env.OIDC_TOKEN_URL}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",
           },
+          body: params,
         }),
         (e) => {
           console.error(e);
