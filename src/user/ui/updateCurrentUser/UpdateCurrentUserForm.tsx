@@ -1,5 +1,6 @@
 import { useUpdateCurrentUserViewModel } from "./updateCurrentUser.view-model";
 import { observer } from "mobx-react-lite";
+import { Button } from "~/components/Button";
 
 const UpdateCurrentUserForm = observer(() => {
   const { register, onSubmit, formState, isLoading } = useUpdateCurrentUserViewModel();
@@ -37,13 +38,13 @@ const UpdateCurrentUserForm = observer(() => {
         )}
       </div>
       
-      <button 
+      <Button 
         type="submit" 
-        disabled={isLoading}
-        className="btn-primary w-full"
+        loading={isLoading}
+        className="w-full"
       >
-        {isLoading ? "Updating..." : "Update Profile"}
-      </button>
+        Update Profile
+      </Button>
     </form>
   );
 });

@@ -7,13 +7,16 @@
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
-    "test": "vitest"
+    "test": "vitest",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
     "@react-router/node": "^7.7.0",
     "@react-router/serve": "^7.7.0",
     "arktype": "^2.1.20",
+    "clsx": "^2.1.1",
     "cookie": "^1.0.2",
     "i18next": "^25.3.2",
     "i18next-browser-languagedetector": "^8.2.0",
@@ -28,15 +31,20 @@
     "react-hook-form": "^7.61.1",
     "react-i18next": "^15.6.1",
     "react-router": "^7.7.0",
-    "remix-i18next": "^7.2.1"
+    "remix-i18next": "^7.2.1",
+    "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
     "@react-router/dev": "^7.7.0",
+    "@storybook/builder-vite": "^9.1.0",
+    "@storybook/react-vite": "^9.1.0",
     "@tailwindcss/vite": "^4.1.4",
     "@types/node": "^20",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "happy-dom": "^18.0.1",
+    "storybook": "^9.1.0",
+    "storybook-addon-remix-react-router": "^5.0.0",
     "tailwindcss": "^4.1.4",
     "typescript": "^5.8.3",
     "vite": "^6.3.3",

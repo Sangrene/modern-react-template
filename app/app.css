@@ -16,7 +16,7 @@ body {
 }
 
 .form-input:focus {
-  @apply bg-gray-750;
+  @apply bg-gray-700;
 }
 
 .form-error {
