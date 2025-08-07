@@ -1,11 +1,15 @@
-import { oidcAuth } from "src/authentication/oauth/oidcAuth.core";
-import { localStore } from "src/shared/persistentKvStore/localStorageKvStore";
-import { httpClient } from "src/shared/httpClient/httpClient";
+import { redirect } from "react-router";
+import { computeSetCookieHeader } from "src/authentication/oauth/cookies";
 
 export async function loader() {
-  const { handleLogout } = oidcAuth({
-    localKvStore: localStore,
-    httpClient: httpClient,
+  return redirect("/", {
+    headers: {
+      "Set-Cookie": computeSetCookieHeader("").match(
+        (cookie) => cookie,
+        (e) => {
+          return "";
+        }
+      ),
+    },
   });
-  return handleLogout({ dontRedirect: true });
 }

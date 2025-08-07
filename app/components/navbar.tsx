@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { NavLink } from "react-router";
+import { LogoutButton } from "src/authentication/ui/LogoutButton";
 
 export interface NavLink {
   label: string;
@@ -14,21 +15,42 @@ export interface NavbarProps {
     email: string;
     avatar?: string;
   };
-  onLogout?: () => void;
   brand?: string;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   links,
   user,
-  onLogout,
   brand = "App",
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAvatarDropdownOpen, setIsAvatarDropdownOpen] = useState(false);
+  const avatarDropdownRef = useRef<HTMLDivElement>(null);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
+
+  const toggleAvatarDropdown = () => {
+    setIsAvatarDropdownOpen(!isAvatarDropdownOpen);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (avatarDropdownRef.current && !avatarDropdownRef.current.contains(event.target as Node)) {
+        setIsAvatarDropdownOpen(false);
+      }
+    };
+
+    if (isAvatarDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isAvatarDropdownOpen]);
 
   return (
     <nav className="bg-gray-800 shadow-lg border-b border-gray-700">
@@ -58,6 +80,18 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </NavLink>
               ))}
             </div>
+
+            {/* Mobile menu button */}
+            <div className="md:hidden ml-4">
+              <button
+                onClick={toggleMobileMenu}
+                className="text-gray-300 hover:text-gray-100 focus:outline-none focus:text-gray-100"
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           {/* Right side - User Menu */}
@@ -74,9 +108,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </div>
 
                   {/* Avatar */}
-                  <div className="relative">
+                  <div className="relative" ref={avatarDropdownRef}>
                     <button
-                      onClick={toggleMobileMenu}
+                      onClick={toggleAvatarDropdown}
                       className="flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 focus:ring-offset-gray-800"
                     >
                       {user.avatar ? (
@@ -93,62 +127,30 @@ export const Navbar: React.FC<NavbarProps> = ({
                         </div>
                       )}
                     </button>
-                  </div>
 
-                  {/* Logout Button */}
-                  {onLogout && (
-                    <button
-                      onClick={onLogout}
-                      className="hidden sm:block ml-3 px-3 py-2 text-sm font-medium text-gray-300 hover:text-gray-100 hover:bg-gray-700 rounded-md transition-colors duration-200"
-                    >
-                      Logout
-                    </button>
-                  )}
-                </div>
+                    {/* Avatar Dropdown */}
+                    {isAvatarDropdownOpen && (
+                      <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-gray-800 ring-1 ring-gray-600 focus:outline-none z-50">
+                        {/* User Info */}
+                        <div className="px-4 py-2 border-b border-gray-700">
+                          <p className="text-sm font-medium text-gray-100">
+                            {user.name}
+                        </p>
+                          <p className="text-xs text-gray-400">{user.email}</p>
+                        </div>
 
-                {/* Mobile Menu */}
-                {isMobileMenuOpen && (
-                  <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-gray-800 ring-1 ring-gray-600 focus:outline-none z-50">
-                    {/* Mobile Navigation Links */}
-                    <div className="md:hidden border-b border-gray-700 pb-2 mb-2">
-                      {links.map((link, index) => (
-                        <a
-                          key={index}
-                          href={link.href}
-                          className={`block px-4 py-2 text-sm ${
-                            link.active
-                              ? "text-blue-400 bg-blue-900/20"
-                              : "text-gray-300 hover:bg-gray-700"
-                          }`}
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          {link.label}
-                        </a>
-                      ))}
-                    </div>
-
-                    {/* User Info */}
-                    <div className="px-4 py-2 border-b border-gray-700">
-                      <p className="text-sm font-medium text-gray-100">
-                        {user.name}
-                      </p>
-                      <p className="text-xs text-gray-400">{user.email}</p>
-                    </div>
-
-                    {/* Logout */}
-                    {onLogout && (
-                      <button
-                        onClick={() => {
-                          onLogout();
-                          setIsMobileMenuOpen(false);
-                        }}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
-                      >
-                        Logout
-                      </button>
+                        {/* Logout */}
+                        <div className="px-4 py-2">
+                          <LogoutButton />
+                        </div>
+                      </div>
                     )}
                   </div>
-                )}
+
+
+                </div>
+
+
               </div>
             ) : (
               /* Login Button when no user */
@@ -173,21 +175,28 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Mobile Navigation Bar */}
         <div className="md:hidden">
           {isMobileMenuOpen && (
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-gray-200">
+            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-gray-700">
               {links.map((link, index) => (
                 <a
                   key={index}
                   href={link.href}
                   className={`block px-3 py-2 rounded-md text-base font-medium ${
                     link.active
-                      ? "text-indigo-600 bg-indigo-50"
-                      : "text-gray-700 hover:bg-gray-100"
+                      ? "text-blue-400 bg-blue-900/20"
+                      : "text-gray-300 hover:bg-gray-700"
                   }`}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   {link.label}
                 </a>
               ))}
+              
+              {/* Mobile Logout */}
+              {user && (
+                <div className="border-t border-gray-700 pt-2 mt-2">
+                  <LogoutButton />
+                </div>
+              )}
             </div>
           )}
         </div>

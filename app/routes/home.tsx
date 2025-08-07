@@ -16,6 +16,7 @@ const Home = observer(() => {
   const { userStore, userCore } = useAppContext();
   const location = useLocation();
   const currentUser = userStore.currentUserState.user;
+
   if(!currentUser) {
     userCore.queryCurrentUser();
   }
