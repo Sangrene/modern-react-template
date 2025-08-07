@@ -7,6 +7,7 @@ export const ClientEnvSchema = type({
   BASE_URL: "string",
   OIDC_LOGIN_URL: "string",
   DOMAIN: "string",
+  OIDC_LOGOUT_URL: "string",
 });
 
 export const ServerEnvSchema = type({

@@ -64,7 +64,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App({ loaderData }: Route.ComponentProps) {
-  useChangeLanguage(loaderData.locale);
+  useChangeLanguage((loaderData as any).locale);
   return <Outlet />;
 }
 

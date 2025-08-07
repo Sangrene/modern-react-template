@@ -1,10 +1,9 @@
 import { err, errAsync, ok, okAsync, Result, ResultAsync } from "neverthrow";
-import { getClientEnv } from "src/shared/env/env";
+import { getClientEnv, getServerEnv } from "src/shared/env/env";
 import { type PersistentKvStore } from "src/shared/persistentKvStore/persistentKvStore";
 import { ArkErrors, type } from "arktype";
 import { type HTTPClient } from "src/shared/httpClient/httpClient";
-import { parse } from "cookie";
-import { ACCESS_TOKEN_COOKIE_NAME } from "./cookies";
+import { clearAllCookies } from "src/authentication/oauth/cookies";
 
 export const OAUTH_STATE_KEY = "oauth_state";
 export const REFRESH_TOKEN_KEY = "refresh_token";
@@ -198,9 +197,35 @@ export const oidcAuth = ({
     );
   };
 
+  const handleLogout = <DontRedirect extends boolean>({
+    dontRedirect,
+  }: {
+    dontRedirect?: DontRedirect;
+  } = {}): Result<
+    DontRedirect extends true ? string : undefined,
+    ArkErrors | Error
+  > => {
+    clearAllCookies();
+    return Result.combine([
+      localKvStore.removeItem(REFRESH_TOKEN_KEY),
+      localKvStore.removeItem(ACCESS_TOKEN_EXPIRES_AT_KEY),
+    ])
+      .andThen(() => getClientEnv())
+      .map((env) => {
+        const logoutUrl = `${env.BASE_URL}/oidc/logout`;
+        if (!dontRedirect) {
+          window.location.href = logoutUrl;
+          return undefined as DontRedirect extends true ? string : undefined;
+        } else {
+          return logoutUrl as DontRedirect extends true ? string : undefined;
+        }
+      });
+  };
+
   return {
     handleRedirectToOidcProvider,
     handleOidcCallback,
     handleRefreshAccessTokenIfNeeded,
+    handleLogout,
   };
 };

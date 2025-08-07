@@ -10,6 +10,7 @@ describe("env", () => {
     APPLICATION_NAME: "test",
     DOMAIN: "test",
     OIDC_TOKEN_URL: "http://localhost:3000/test",
+    OIDC_LOGOUT_URL: "http://localhost:3000/test",
   }
 
   beforeEach(() => {

@@ -39,3 +39,7 @@ export const hasAccessTokenInCookies = (request: Request) => {
     return err(new Error("Failed to parse cookies"));
   }
 };
+
+export const clearAllCookies = () => {
+  document.cookie = "";
+};

@@ -8,6 +8,7 @@ This template is meant to provide a base to develop new web apps. It showcases s
 - 📐 SOLID
 - 🔧 Environment variables management
 - ⚠️ Explicit error handling
+- 📝 Logging
 
 ## OpenID Connect Authentication
 This pattern employ the commonly used OAuth2 protocol, implement the Authorization Code Grant (see https://datatracker.ietf.org/doc/html/rfc6749#section-4.1). It is secured because of the use of React Router server actions, which are doing the requests to the identity provider. Neither the access token nor the oauth secrets are exposed to the frontend.
@@ -69,6 +70,44 @@ This template uses [neverthrow](https://github.com/supermacro/neverthrow) for fu
 - **Chain operations** using `.andThen()` for sequential operations
 - **Transform errors** using `.mapErr()` to provide context
 - **Test both success and error paths** in your unit tests
+
+## Logging
+This template implements structured logging to provide comprehensive visibility into application behavior, debugging capabilities, and operational monitoring. Logging is integrated throughout the application to track user actions, system events, and error conditions.
+
+### Logging Levels
+The application supports multiple logging levels to categorize the importance and nature of log messages:
+
+- **ERROR**: Critical errors that require immediate attention
+- **WARN**: Warning conditions that may indicate potential issues
+- **INFO**: General information about application flow and state
+- **DEBUG**: Detailed debugging information for development
+- **TRACE**: Very detailed tracing information for troubleshooting
+
+### Structured Logging
+All log messages follow a structured format that includes:
+- **Timestamp**: When the event occurred
+- **Level**: Log level (ERROR, WARN, INFO, DEBUG, TRACE)
+- **Context**: Component or module where the log originated
+- **Message**: Human-readable description of the event
+- **Metadata**: Additional contextual data (user ID, request ID, etc.)
+
+### Integration Points
+Logging is integrated at key points throughout the application:
+
+- **Authentication flows**: Track login attempts, token refreshes, and authorization failures
+- **API requests**: Log request/response cycles with timing and status information
+- **User actions**: Record important user interactions and state changes
+- **Error handling**: Capture detailed error information with stack traces
+- **Performance monitoring**: Track operation timing and resource usage
+
+### Best Practices
+- **Use appropriate log levels** based on the importance and audience of the message
+- **Include relevant context** such as user IDs, request IDs, and operation parameters
+- **Avoid logging sensitive information** like passwords, tokens, or personal data
+- **Structure log messages consistently** to enable easy parsing and analysis
+- **Use correlation IDs** to trace requests across multiple log entries
+- **Configure log retention** based on operational and compliance requirements
+
 
 ## Hexagonal Architecture
 __/src__ directory contains all the app.
