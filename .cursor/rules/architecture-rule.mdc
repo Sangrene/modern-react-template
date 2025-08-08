@@ -1,0 +1,8 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Architecture of the project: which file to reuse, how to link React with the hexagon, how to reuse UI components
+
+- When adding a basic HTML component (Button, Dropdown, Select, Input etc...) to a component, always try to use a component from /app/components. If a basic component is missing, ask to create one with its dedicated storybook .stories.tsx file.
