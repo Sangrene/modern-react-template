@@ -17,6 +17,7 @@ const clientEnv: typeof ClientEnvSchema.infer = {
   BASE_URL: "http://localhost:3000",
   APPLICATION_NAME: "test",
   DOMAIN: "test",
+  OIDC_LOGOUT_URL: "http://oidc.com/logout",
 };
 const serverEnv: typeof ServerEnvSchema.infer = {
   OIDC_CLIENT_ID: "test",
@@ -26,6 +27,7 @@ const serverEnv: typeof ServerEnvSchema.infer = {
   APPLICATION_NAME: "test",
   DOMAIN: "test",
   OIDC_TOKEN_URL: "http://oidc.com/authorize",
+  OIDC_LOGOUT_URL: "http://oidc.com/logout",
 };
 describe("OIDC Auth", () => {
   beforeEach(() => {
