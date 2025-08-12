@@ -1,0 +1,6 @@
+---
+description: 
+globs: *ts,*tsx
+alwaysApply: false
+---
+When developing a feature, apply a TDD rules. Only .core files should be tested. You will write a test file with the various cases of the use case, test that each use case is failing then writing the code so that the test succeed, according to the request feature.
