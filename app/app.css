@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "RubikScribble";
+  src: local("SourceSansPro"),
+    url("./assets/fonts/Source_Sans_Pro/SourceSansPro-Regular.ttf")
+      format("truetype");
+}
+
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";

@@ -14,33 +14,22 @@ import { getClientEnv } from "../src/shared/env/env";
 import { getLocale, i18nextMiddleware } from "./i18n/i18nextMiddleware";
 import { useChangeLanguage } from "remix-i18next/react";
 import { AppProvider } from "src/shared/app/app.provider";
+import { cspMiddleware, getNonce } from "./lib/cspMiddleware";
 
-export const unstable_middleware = [i18nextMiddleware];
-
-export const links: Route.LinksFunction = () => [
-  { rel: "preconnect", href: "https://fonts.googleapis.com" },
-  {
-    rel: "preconnect",
-    href: "https://fonts.gstatic.com",
-    crossOrigin: "anonymous",
-  },
-  {
-    rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
-  },
-];
+export const unstable_middleware = [i18nextMiddleware, cspMiddleware];
 
 export async function loader({ context }: Route.LoaderArgs) {
   const env = getClientEnv();
   if (env.isErr()) {
     throw new Error(env.error.join("\n"));
   }
+  const nonce = getNonce(context);
   const locale = getLocale(context);
-  return Response.json({ env: env.value, locale });
+  return Response.json({ env: env.value, locale, nonce });
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const { env, locale } = useLoaderData<typeof loader>();
+  const { env, locale, nonce } = useLoaderData<typeof loader>();
   return (
     <html lang={locale}>
       <head>
@@ -49,6 +38,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
         <script
+          nonce={nonce}
           dangerouslySetInnerHTML={{
             __html: `window.env = ${JSON.stringify(env)}`,
           }}
@@ -56,8 +46,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <AppProvider>{children}</AppProvider>
-        <ScrollRestoration />
-        <Scripts />
+        <ScrollRestoration nonce={nonce} />
+        <Scripts nonce={nonce} />
       </body>
     </html>
   );
