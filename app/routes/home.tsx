@@ -7,6 +7,7 @@ import { hasAccessTokenInCookies } from "src/authentication/oauth/cookies";
 import { oidcAuth } from "src/authentication/oauth/oidcAuth.core";
 import { localStore } from "src/shared/persistentKvStore/localStorageKvStore";
 import { httpClient } from "src/shared/httpClient/httpClient";
+import { LinkInterceptorComponent } from "~/lib/linkInterceptor";
 
 export const clientLoader = async ({ request }: Route.ClientLoaderArgs) => {
   const { handleRefreshAccessTokenIfNeeded, handleLogout } = oidcAuth({
@@ -63,6 +64,7 @@ const Home = observer(() => {
 
   return (
     <>
+      <LinkInterceptorComponent />
       <Navbar
         links={navigationLinks}
         user={
