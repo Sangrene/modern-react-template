@@ -138,7 +138,7 @@ describe("OIDC Auth", () => {
   });
 
   describe("handleRefreshAccessTokenIfNeeded", () => {
-    it("should not do anything if access token is not expiring in a minute or less", async () => {
+    it("should not do anything if access token is not expiring in 2 minute or less", async () => {
       const inMemoryStore = createMemoryStore();
       const mockHttpClient = {
         post: vi
@@ -146,7 +146,7 @@ describe("OIDC Auth", () => {
           .mockImplementation(<T>(params: any): ResultAsync<T, Error> => {
             return okAsync({
               refresh_token: "refresh_token",
-              expires_in: 120,
+              expires_in: 200,
             } as T);
           }),
         get: vi.fn(),
