@@ -2,7 +2,7 @@ import { serialize, parse } from "cookie";
 import { getClientEnv } from "src/shared/env/env";
 import { ok, err } from "neverthrow";
 
-export const ACCESS_TOKEN_COOKIE_NAME = "Authorization";
+const ACCESS_TOKEN_COOKIE_NAME = "Authorization";
 
 export const computeSetCookieHeader = (token: string, expiresIt?: boolean) => {
   return getClientEnv().andThen((env) => {

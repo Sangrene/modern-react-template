@@ -7,8 +7,8 @@ import { clearAllCookies } from "src/authentication/oauth/cookies";
 
 export const OAUTH_STATE_KEY = "oauth_state";
 export const REFRESH_TOKEN_KEY = "refresh_token";
-export const ACCESS_TOKEN_EXPIRES_AT_KEY = "access_token_expires_at";
-export const TOKEN_LIMIT_MS = 2 * 60 * 1000; // refresh access token 2 minutes before expiration
+const ACCESS_TOKEN_EXPIRES_AT_KEY = "access_token_expires_at";
+const TOKEN_LIMIT_MS = 2 * 60 * 1000; // refresh access token 2 minutes before expiration
 
 export const TokenResponse = type({
   refresh_token: "string",
