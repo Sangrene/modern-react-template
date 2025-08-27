@@ -72,6 +72,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <NavLink
                   key={link.label}
                   to={link.href}
+                  viewTransition
                   end
                   className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200 ${
                     link.active
@@ -164,18 +165,18 @@ export const Navbar: React.FC<NavbarProps> = ({
             ) : (
               /* Login Button when no user */
               <div className="flex items-center space-x-4">
-                <a
-                  href="/login"
+                <NavLink
+                  to="/login"
                   className="text-gray-300 hover:text-gray-100 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
                 >
                   Login
-                </a>
-                <a
-                  href="/signup"
+                </NavLink>
+                <NavLink
+                  to="/signup"
                   className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
                 >
                   Sign Up
-                </a>
+                </NavLink>
               </div>
             )}
           </div>
