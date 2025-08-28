@@ -7,6 +7,7 @@ import LanguageDetector from "i18next-browser-languagedetector";
 import Backend from "i18next-http-backend";
 import i18n from "./i18n/i18n";
 import { getInitialNamespaces } from "remix-i18next/client";
+import { initClientTelemetry } from "./telemetry/clientTelemetry";
 
 const main = async () => {
   await i18next
@@ -23,6 +24,9 @@ const main = async () => {
         caches: [],
       },
     });
+
+  initClientTelemetry();
+
   startTransition(() => {
     hydrateRoot(
       document,

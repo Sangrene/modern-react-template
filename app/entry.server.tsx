@@ -12,8 +12,10 @@ import { renderToPipeableStream } from "react-dom/server";
 import { I18nextProvider } from "react-i18next";
 import { getInstance } from "./i18n/i18nextMiddleware";
 import { generateCspString, getNonce } from "./lib/cspMiddleware";
+import { getTracer, initServerTelemetry } from "./telemetry/serverTelemetry";
 
 export const streamTimeout = 50000;
+initServerTelemetry();
 
 export default function handleRequest(
   request: Request,
@@ -22,63 +24,71 @@ export default function handleRequest(
   routerContext: EntryContext,
   loadContext: unstable_RouterContextProvider
 ) {
-  return new Promise((resolve, reject) => {
-    let shellRendered = false;
-    let userAgent = request.headers.get("user-agent");
-    const nonce = getNonce(loadContext);
+  return getTracer().startActiveSpan("handleRequest", async (span) => {
+    return new Promise((resolve, reject) => {
+      let shellRendered = false;
+      let userAgent = request.headers.get("user-agent");
+      const nonce = getNonce(loadContext);
 
-    // Ensure requests from bots and SPA Mode renders wait for all content to load before responding
-    // https://react.dev/reference/react-dom/server/renderToPipeableStream#waiting-for-all-content-to-load-for-crawlers-and-static-generation
-    let readyOption: keyof RenderToPipeableStreamOptions =
-      (userAgent && isbot(userAgent)) || routerContext.isSpaMode
-        ? "onAllReady"
-        : "onShellReady";
-    const i18nInstance = getInstance(loadContext);
-    const { pipe, abort } = renderToPipeableStream(
-      <I18nextProvider i18n={i18nInstance}>
-        <ServerRouter context={routerContext} url={request.url} nonce={nonce} />
-      </I18nextProvider>,
-      {
-        [readyOption]() {
-          shellRendered = true;
-          const body = new PassThrough();
-          const stream = createReadableStreamFromReadable(body);
+      // Ensure requests from bots and SPA Mode renders wait for all content to load before responding
+      // https://react.dev/reference/react-dom/server/renderToPipeableStream#waiting-for-all-content-to-load-for-crawlers-and-static-generation
+      let readyOption: keyof RenderToPipeableStreamOptions =
+        (userAgent && isbot(userAgent)) || routerContext.isSpaMode
+          ? "onAllReady"
+          : "onShellReady";
+      const i18nInstance = getInstance(loadContext);
+      const { pipe, abort } = renderToPipeableStream(
+        <I18nextProvider i18n={i18nInstance}>
+          <ServerRouter
+            context={routerContext}
+            url={request.url}
+            nonce={nonce}
+          />
+        </I18nextProvider>,
+        {
+          [readyOption]() {
+            shellRendered = true;
+            const body = new PassThrough();
+            const stream = createReadableStreamFromReadable(body);
 
-          responseHeaders.set("Content-Type", "text/html");
-          responseHeaders.set(
-            "Content-Security-Policy",
-            generateCspString(nonce)
-              .replace(/\s{2,}/g, " ")
-              .trim()
-          );
-          resolve(
-            new Response(stream, {
-              headers: responseHeaders,
-              status: responseStatusCode,
-            })
-          );
+            responseHeaders.set("Content-Type", "text/html");
+            responseHeaders.set(
+              "Content-Security-Policy",
+              generateCspString(nonce)
+                .replace(/\s{2,}/g, " ")
+                .trim()
+            );
+            span.end();
+            resolve(
+              new Response(stream, {
+                headers: responseHeaders,
+                status: responseStatusCode,
+              })
+            );
 
-          pipe(body);
-        },
-        onShellError(error: unknown) {
-          console.error(error);
-          reject(error);
-        },
-        onError(error: unknown) {
-          responseStatusCode = 500;
-          // Log streaming rendering errors from inside the shell.  Don't log
-          // errors encountered during initial shell rendering since they'll
-          // reject and get logged in handleDocumentRequest.
-          if (shellRendered) {
+            pipe(body);
+          },
+          onShellError(error: unknown) {
             console.error(error);
-          }
-        },
-        nonce,
-      }
-    );
+            reject(error);
+          },
+          onError(error: unknown) {
+            responseStatusCode = 500;
+            // Log streaming rendering errors from inside the shell.  Don't log
+            // errors encountered during initial shell rendering since they'll
+            // reject and get logged in handleDocumentRequest.
+            if (shellRendered) {
+              console.error(error);
+            }
+            span.end();
+          },
+          nonce,
+        }
+      );
 
-    // Abort the rendering stream after the `streamTimeout` so it has time to
-    // flush down the rejected boundaries
-    setTimeout(abort, streamTimeout + 1000);
+      // Abort the rendering stream after the `streamTimeout` so it has time to
+      // flush down the rejected boundaries
+      setTimeout(abort, streamTimeout + 1000);
+    });
   });
 }
