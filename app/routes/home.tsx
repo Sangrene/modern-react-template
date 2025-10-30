@@ -8,6 +8,7 @@ import { oidcAuth } from "src/authentication/oauth/oidcAuth.core";
 import { localStore } from "src/shared/persistentKvStore/localStorageKvStore";
 import { httpClient } from "src/shared/httpClient/httpClient";
 import { LinkInterceptorComponent } from "~/lib/linkInterceptor";
+import { useTranslation } from "react-i18next";
 
 export const clientLoader = async ({ request }: Route.ClientLoaderArgs) => {
   const { handleRefreshAccessTokenIfNeeded, handleLogout } = oidcAuth({
@@ -38,6 +39,7 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
 
 const Home = observer(() => {
   const { userStore, userCore } = useAppContext();
+  const { t } = useTranslation(["common", "user"]);
   const location = useLocation();
   const currentUser = userStore.currentUserState.user;
 
@@ -47,14 +49,14 @@ const Home = observer(() => {
 
   const navigationLinks = [
     {
-      label: "Home",
+      label: t("common:home", "Home"),
       href: "/",
       active: location.pathname === "/",
     },
     ...(currentUser
       ? [
           {
-            label: "Update Profile",
+            label: t("user:update_profile", "Update Profile"),
             href: "/user/update",
             active: location.pathname === "/user/update",
           },

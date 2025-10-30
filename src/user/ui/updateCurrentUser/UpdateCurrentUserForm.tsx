@@ -1,19 +1,21 @@
 import { useUpdateCurrentUserViewModel } from "./updateCurrentUser.view-model";
 import { observer } from "mobx-react-lite";
 import { Button } from "~/components/Button";
+import { useTranslation } from "react-i18next";
 
 const UpdateCurrentUserForm = observer(() => {
   const { register, onSubmit, formState, isLoading } = useUpdateCurrentUserViewModel();
+  const { t } = useTranslation("user");
   
   return (
     <form onSubmit={onSubmit} className="space-y-6">
       <div>
         <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
-          Name
+          {t("name", "Name")}
         </label>
         <input 
           id="name"
-          placeholder="Enter your name" 
+          placeholder={t("enter_your_name", "Enter your name")} 
           className="form-input"
           {...register("name")} 
         />
@@ -24,12 +26,12 @@ const UpdateCurrentUserForm = observer(() => {
       
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-          Email
+          {t("email", "Email")}
         </label>
         <input 
           id="email"
           type="email"
-          placeholder="Enter your email" 
+          placeholder={t("enter_your_email", "Enter your email")} 
           className="form-input"
           {...register("email")} 
         />
@@ -43,7 +45,7 @@ const UpdateCurrentUserForm = observer(() => {
         loading={isLoading}
         className="w-full"
       >
-        Update Profile
+        {t("update_profile", "Update Profile")}
       </Button>
     </form>
   );

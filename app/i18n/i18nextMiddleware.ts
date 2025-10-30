@@ -9,6 +9,7 @@ export const [i18nextMiddleware, getLocale, getInstance] =
       supportedLanguages: i18n.supportedLngs,
       fallbackLanguage: i18n.fallbackLng,
       async findLocale(request) {
+        //TODO: Use Locale cookie for localization
         const url = new URL(request.url);
         const locale = url.pathname.split("/").at(1);
         return locale || "en";
