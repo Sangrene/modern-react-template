@@ -1,0 +1,82 @@
+---
+description: Hexagonal Architecture (Ports & Adapters) principles and SOLID patterns
+globs: **/*.core.ts,**/*.repository.ts,**/*.store.ts
+alwaysApply: true
+---
+# Hexagonal Architecture & SOLID Principles
+
+This project follows **Hexagonal Architecture** (Ports & Adapters) with **SOLID principles**. Core business logic must be framework-agnostic and testable.
+
+## Core Principles
+
+### Dependency Inversion
+- **Core files** (`.core.ts`) must NOT depend on external frameworks (React, HTTP libraries, etc.)
+- All dependencies must be **injected** through function parameters
+- Core files should only depend on **interfaces/types**, never concrete implementations
+- Example: See `/src/user/user.core.ts` and `/src/user/features/updateCurrentUser/updateCurrentUser.core.ts`
+
+### Interface Segregation
+- Define clear, focused interfaces for each dependency
+- Interfaces should be small and specific (e.g., `UserRepository`, `HTTPClient`, `PersistentKvStore`)
+- Avoid fat interfaces that force implementers to provide unused methods
+
+### Single Responsibility
+- Each `.core.ts` file should handle one domain or feature
+- Use cases should be in separate files under `features/` directory
+- Repositories should only handle data access, not business logic
+
+### Open/Closed Principle
+- Core logic should be extensible without modification
+- Use dependency injection to swap implementations
+- Create new features by composing existing cores, not modifying them
+
+## File Structure Patterns
+
+### Core Files (`*.core.ts`)
+- Must accept all dependencies via function parameters
+- Return functions or objects that encapsulate the use case
+- Use factory pattern: `createXCore({ dependencies }) => { useCase }`
+- Example structure:
+  ```typescript
+  export const createFeatureCore = ({ 
+    repository, 
+    store 
+  }: FeatureCoreArgs) => {
+    const useCase = () => {
+      // Business logic here
+    };
+    return { useCase };
+  };
+  ```
+
+### Repository Files (`*.repository.ts`)
+- Define interfaces for data access (ports)
+- Implementations are adapters that can be swapped
+- Must return `Result<T, Error>` or `ResultAsync<T, Error>` from neverthrow
+- Example: See `/src/user/user.repository.ts`
+
+### Store Files (`*.store.ts`)
+- Use MobX for reactive state management
+- Stores are injected into cores, not imported directly
+- Stores should be simple state containers with minimal logic
+
+## Dependency Injection Pattern
+
+Always use dependency injection:
+```typescript
+// ✅ GOOD: Dependencies injected
+export const createUserCore = ({ 
+  userStore, 
+  userRepository 
+}: UserCoreArgs) => { ... }
+
+// ❌ BAD: Direct imports in core
+import { userStore } from './user.store';
+```
+
+## Testing Isolation
+
+- Core files must be testable in isolation
+- Use fake implementations (see `/src/user/tests/user.repository.fake.ts`)
+- Never import real implementations in core files
+- All external dependencies must be mockable

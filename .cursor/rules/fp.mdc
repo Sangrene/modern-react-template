@@ -1,0 +1,372 @@
+---
+description: Functional programming patterns and explicit error handling with neverthrow
+globs: **/*.ts,**/*.tsx
+alwaysApply: true
+---
+# Functional Programming & Error Handling with neverthrow
+
+This project uses **neverthrow** for functional programming patterns and explicit error handling with the `Result<T, E>` type. Never use try/catch or throw exceptions for expected errors. Embrace functional composition, chaining, and combinators.
+
+## Core Principles
+
+### Always Use Result Types
+- Functions that can fail must return `Result<T, Error>` or `ResultAsync<T, Error>`
+- Never throw exceptions for expected error cases
+- Use `ok(value)` and `err(error)` to create results
+- Use `ResultAsync` for async operations
+- Prefer functional composition over imperative code
+
+### Error Handling Patterns
+
+```typescript
+import { Result, ok, err, ResultAsync, okAsync, errAsync } from "neverthrow";
+
+// ✅ GOOD: Explicit Result return type
+const fetchUser = (id: string): ResultAsync<User, Error> => {
+  return httpClient.get({ url: `/users/${id}`, responseType: UserSchema });
+};
+
+// ❌ BAD: Throwing exceptions
+const fetchUser = async (id: string): Promise<User> => {
+  const response = await fetch(`/users/${id}`);
+  if (!response.ok) throw new Error("Failed");
+  return response.json();
+};
+```
+
+## Functional Composition Patterns
+
+### Chaining Operations
+
+Use `.map()`, `.mapErr()`, `.andThen()`, `.asyncAndThen()` for functional chaining:
+
+```typescript
+// ✅ GOOD: Sequential chaining with andThen
+validateType(schema, input)
+  .andThen((validated) => repository.save(validated))
+  .map((saved) => saved.id)
+  .mapErr((error) => {
+    // Transform error
+    return new Error(`Operation failed: ${error.message}`);
+  });
+
+// ✅ GOOD: Async chaining
+validateType(schema, input)
+  .asyncAndThen((validated) => repository.saveAsync(validated))
+  .map((saved) => saved.id);
+
+// ✅ GOOD: Flattening nested Results
+const nested = ok(ok(1234));
+const flattened = nested.andThen((innerResult) => innerResult);
+// flattened is Ok(1234)
+```
+
+### Transforming Values and Errors
+
+```typescript
+// ✅ GOOD: Transform success values with map
+result
+  .map((value) => value.toUpperCase())
+  .map((upper) => `Prefix: ${upper}`);
+
+// ✅ GOOD: Transform errors with mapErr
+result
+  .mapErr((error) => new CustomError(error.message))
+  .mapErr((customError) => {
+    logger.error(customError);
+    return customError;
+  });
+
+// ✅ GOOD: Chain both transformations
+result
+  .map((value) => processValue(value))
+  .mapErr((error) => enrichError(error));
+```
+
+### Combining Multiple Results
+
+```typescript
+import { Result, ResultAsync } from "neverthrow";
+
+// ✅ GOOD: Combine multiple Results (short-circuits on first error)
+const validations = [
+  validateName(name),
+  validateAge(age),
+  validateEmail(email),
+];
+
+const combined = Result.combine(validations)
+  .map(([validName, validAge, validEmail]) => ({
+    name: validName,
+    age: validAge,
+    email: validEmail,
+  }));
+
+// ✅ GOOD: Combine with tuple types (preserves individual types)
+const tuple = [
+  ok("Alice") as Result<string, never>,
+  ok(30) as Result<number, never>,
+  ok(true) as Result<boolean, never>,
+] as const;
+
+const combinedTuple = Result.combine(tuple);
+// Type: Result<[string, number, boolean], never>
+
+// ✅ GOOD: Combine async operations (parallel execution)
+const asyncOperations = [
+  fetchUser(userId),
+  fetchPosts(userId),
+  fetchComments(userId),
+];
+
+const combinedAsync = ResultAsync.combine(asyncOperations)
+  .map(([user, posts, comments]) => ({
+    user,
+    posts,
+    comments,
+  }));
+
+// ✅ GOOD: Combine without short-circuiting (collect all errors)
+const allValidations = Result.combineWithAllErrors([
+  validateField1(value1),
+  validateField2(value2),
+  validateField3(value3),
+]);
+// Returns Result<T[], E[]> - collects all errors if any fail
+```
+
+### Converting Promises and Throwable Functions
+
+```typescript
+// ✅ GOOD: Convert Promise to ResultAsync
+const fetchData = (url: string): ResultAsync<Data, Error> => {
+  return ResultAsync.fromPromise(
+    fetch(url).then((r) => r.json()),
+    (error) => new Error(`Fetch failed: ${error}`)
+  );
+};
+
+// ✅ GOOD: Wrap throwable async functions
+const safeAsyncOperation = ResultAsync.fromThrowable(
+  async (input: string) => {
+    // This function might throw
+    if (!input) throw new Error("Invalid input");
+    return await processInput(input);
+  },
+  (error) => new Error(`Operation failed: ${error}`)
+);
+
+// ✅ GOOD: Wrap throwable sync functions
+import { Result } from "neverthrow";
+
+const safeSyncOperation = Result.fromThrowable(
+  (input: string) => {
+    if (!input) throw new Error("Invalid input");
+    return processInput(input);
+  },
+  (error) => new Error(`Operation failed: ${error}`)
+);
+```
+
+### Matching Results
+
+Always handle both success and error cases explicitly:
+
+```typescript
+// ✅ GOOD: Explicit error handling with match
+result.match(
+  (value) => {
+    // Handle success
+    store.setValue(value);
+  },
+  (error) => {
+    // Handle error
+    store.setError(error);
+  }
+);
+
+// ✅ GOOD: In view models
+await userCore.updateUser(data).match(
+  () => {
+    setIsLoading(false);
+    // Success handling
+  },
+  (error) => {
+    setIsLoading(false);
+    // Error handling
+  }
+);
+
+// ✅ GOOD: Using isOk/isErr for conditional logic
+if (result.isOk()) {
+  const value = result.value;
+  // Use value
+} else {
+  const error = result.error;
+  // Handle error
+}
+```
+
+## Repository Pattern
+
+All repository methods must return Result types:
+
+```typescript
+// ✅ GOOD: Repository with Result
+export interface UserRepository {
+  queryCurrentUser: () => ResultAsync<User, Error>;
+  updateCurrentUser: (user: User) => ResultAsync<User, Error>;
+}
+
+// ❌ BAD: Repository with exceptions
+export interface UserRepository {
+  queryCurrentUser: () => Promise<User>; // Can throw
+}
+```
+
+## Validation Pattern
+
+Use `validateType` with ArkType schemas:
+
+```typescript
+import { validateType } from "src/shared/schema/validateType";
+
+// ✅ GOOD: Validation returns Result
+const result = validateType(UserSchema, input);
+result.andThen((user) => {
+  // Use validated user
+});
+```
+
+## Functional Composition Best Practices
+
+### Sequential Operations
+
+```typescript
+// ✅ GOOD: Chain dependent operations
+const processUser = (input: UserInput): ResultAsync<User, Error> => {
+  return validateType(UserInputSchema, input)
+    .asyncAndThen((validated) => repository.save(validated))
+    .map((saved) => {
+      // Transform the result
+      return { ...saved, processed: true };
+    });
+};
+```
+
+### Parallel Operations
+
+```typescript
+// ✅ GOOD: Combine independent operations in parallel
+const loadUserData = (userId: string): ResultAsync<UserData, Error> => {
+  return ResultAsync.combine([
+    fetchUser(userId),
+    fetchUserSettings(userId),
+    fetchUserPreferences(userId),
+  ]).map(([user, settings, preferences]) => ({
+    user,
+    settings,
+    preferences,
+  }));
+};
+```
+
+### Error Transformation
+
+```typescript
+// ✅ GOOD: Transform errors at appropriate boundaries
+const fetchUserWithRetry = (id: string): ResultAsync<User, Error> => {
+  return fetchUser(id).mapErr((error) => {
+    // Transform domain errors
+    if (error.message.includes("404")) {
+      return new Error("User not found");
+    }
+    return new Error(`Failed to fetch user: ${error.message}`);
+  });
+};
+```
+
+### Short-Circuiting Behavior
+
+```typescript
+// ✅ GOOD: Understand short-circuiting in chains
+const result = ok(1)
+  .andThen((x) => err("First error"))
+  .andThen((x) => ok(x * 2)); // This never executes
+// result is Err("First error")
+
+// ✅ GOOD: Use combine for independent validations
+const allValid = Result.combine([
+  validateA(a),
+  validateB(b),
+  validateC(c),
+]); // Stops at first error
+
+// ✅ GOOD: Use combineWithAllErrors to collect all errors
+const allErrors = Result.combineWithAllErrors([
+  validateA(a),
+  validateB(b),
+  validateC(c),
+]); // Returns all errors if any fail
+```
+
+## Error Propagation
+
+- Use `.mapErr()` to transform errors at boundaries
+- Use `.asyncAndThen()` for async error propagation
+- Don't swallow errors - always handle or propagate them explicitly
+- Transform errors to domain-specific types when crossing boundaries
+
+## Never Use Try/Catch for Expected Errors
+
+```typescript
+// ❌ BAD: Try/catch for expected errors
+try {
+  const user = await fetchUser();
+  return user;
+} catch (error) {
+  return null;
+}
+
+// ✅ GOOD: Result pattern
+const result = await fetchUser();
+return result.match(
+  (user) => user,
+  (error) => null
+);
+```
+
+## Exception Handling
+
+Only use try/catch for truly unexpected errors (e.g., programming errors, system failures) and immediately convert to Result:
+
+```typescript
+// ✅ GOOD: Converting exceptions to Results
+const safeOperation = (): Result<string, Error> => {
+  try {
+    const value = riskyOperation();
+    return ok(value);
+  } catch (error) {
+    return err(error instanceof Error ? error : new Error("Unknown error"));
+  }
+};
+
+// ✅ GOOD: Using fromThrowable for cleaner conversion
+const safeOperation = Result.fromThrowable(
+  riskyOperation,
+  (error) => error instanceof Error ? error : new Error("Unknown error")
+);
+```
+
+## Functional Programming Guidelines
+
+1. **Prefer composition over mutation** - Chain operations instead of modifying state
+2. **Use combinators** - Leverage `combine`, `combineWithAllErrors` for parallel operations
+3. **Transform at boundaries** - Use `map` and `mapErr` to transform values/errors
+4. **Flatten nested Results** - Use `andThen` to flatten `Result<Result<T, E>, E>`
+5. **Handle errors explicitly** - Always use `match`, `isOk`, or `isErr` to handle both cases
+6. **Chain operations functionally** - Build pipelines with `.map()`, `.andThen()`, etc.
+7. **Convert promises safely** - Use `ResultAsync.fromPromise` or `ResultAsync.fromThrowable`
+8. **Combine independent operations** - Use `combine` for parallel execution
+9. **Collect all errors when needed** - Use `combineWithAllErrors` for validation scenarios
+10. **Never throw in business logic** - Always return Result types from functions that can fail

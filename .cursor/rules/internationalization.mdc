@@ -1,0 +1,86 @@
+---
+description: Internationalization (i18n) patterns with i18next
+globs: **/*.tsx,**/*.ts
+alwaysApply: true
+---
+# Internationalization (i18n)
+
+This project uses **i18next** for internationalization with React Router SSR support. All user-facing text must be internationalized.
+
+## Core Principles
+
+### Translation Keys
+- Use namespaced keys: `namespace:key` format
+- Default namespace is `"common"`
+- Use descriptive keys that indicate context
+- Provide fallback English text as second parameter
+
+### Translation Usage
+
+```typescript
+import { useTranslation } from "react-i18next";
+
+// ✅ GOOD: Namespaced translation with fallback
+const { t } = useTranslation(["common", "user"]);
+const title = t("common:home", "Home");
+const button = t("user:update_profile", "Update Profile");
+
+// ✅ GOOD: Single namespace
+const { t } = useTranslation("user");
+const label = t("name", "Name");
+```
+
+### Translation Files
+
+- Translations are in `/public/locales/{lang}/{namespace}.json`
+- Supported languages: `en`, `fr` (see `/app/i18n/i18n.ts`)
+- Each domain should have its own namespace (e.g., `user.json`, `common.json`)
+
+### Component Pattern
+
+```typescript
+// ✅ GOOD: Component with i18n
+import { useTranslation } from "react-i18next";
+
+const MyComponent = () => {
+  const { t } = useTranslation("user");
+  
+  return (
+    <div>
+      <h1>{t("title", "User Profile")}</h1>
+      <button>{t("save", "Save")}</button>
+    </div>
+  );
+};
+```
+
+### Form Labels and Placeholders
+
+```typescript
+// ✅ GOOD: Translated form elements
+<input 
+  placeholder={t("enter_your_name", "Enter your name")} 
+/>
+<label>{t("email", "Email")}</label>
+```
+
+### Error Messages
+
+```typescript
+// ✅ GOOD: Translated error messages
+{formState.errors.name && (
+  <div className="form-error">
+    {t("validation.name_required", "Name is required")}
+  </div>
+)}
+```
+
+## Rules
+
+1. **Always use `useTranslation` hook** for translations
+2. **Never hardcode user-facing strings** in components
+3. **Use namespaced keys** (`namespace:key`) for organization
+4. **Provide fallback English text** as second parameter
+5. **Keep translation keys descriptive** and contextual
+6. **Update translation files** when adding new strings
+7. **Use appropriate namespaces** (e.g., `user` for user domain, `common` for shared)

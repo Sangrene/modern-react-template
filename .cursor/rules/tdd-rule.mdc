@@ -1,6 +1,19 @@
 ---
-description: 
-globs: *ts,*tsx
-alwaysApply: false
+description: Test Driven Development
+globs: **/*.view-model.ts,**/*.view-model.tsx,**/*.core.ts,
+alwaysApply: true
 ---
-When developing a feature, apply a TDD rules. Only .core files should be tested. You will write a test file with the various cases of the use case, test that each use case is failing then writing the code so that the test succeed, according to the request feature.
+# Test Driven Development
+When developing a feature, apply a TDD rules. Only *.core and *.view-model files should be automatically tested. 
+
+## Steps
+When writing core and view-model code, you should loop between the following steps :
+- Write a failing test matching one of the feature use case.
+- Write the code making this failing test pass.
+- Test that the failing test is now passing.
+
+## Test in isolation
+When testing core files, the tests should be in total isolation. As the core are not dependant on external dependencies but rather on interface, you can create the fake interfaces to make the test pass.
+
+## Don't test existing libraries or implementation details
+The tests should only test the code logic itself, from the caller point of view, not an external library or the internal of the core or view-model. The only that should be tested are the real use cases of these files, what is exposed (data or functions).

@@ -1,0 +1,144 @@
+---
+description: View Model pattern for connecting React to business logic
+globs: **/*.view-model.tsx,**/*.view-model.ts
+alwaysApply: true
+---
+# View Model Pattern
+
+View Models (`*.view-model.tsx`) are the bridge between React components and the hexagonal architecture core. They handle React-specific concerns while delegating business logic to cores.
+
+## Core Principles
+
+### Separation of Concerns
+- **View Models** handle React hooks, form state, loading states
+- **Core files** handle business logic and data operations
+- **React Components** handle presentation and user interaction
+
+### Access Pattern
+- View models access cores through `useAppContext()`
+- View models access stores through `useAppContext()`
+- Never import cores or stores directly in view models
+
+## Implementation Pattern
+
+### Basic View Model Structure
+
+```typescript
+import { useCallback, useState } from "react";
+import { useAppContext } from "src/shared/app/app.provider";
+import { useForm } from "react-hook-form";
+import { arktypeResolver } from "@hookform/resolvers/arktype";
+
+export const useFeatureViewModel = () => {
+  const { featureCore, featureStore } = useAppContext();
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Business logic delegation
+  const performAction = useCallback(
+    async (data: InputType) => {
+      setIsLoading(true);
+      return await featureCore.performAction(data).match(
+        () => {
+          setIsLoading(false);
+          // Success handling
+        },
+        (error) => {
+          setIsLoading(false);
+          // Error handling
+        }
+      );
+    },
+    [featureCore]
+  );
+
+  // Form setup with validation
+  const { handleSubmit, formState, register } = useForm<InputType>({
+    resolver: arktypeResolver(InputSchema), // ArkType validation
+    defaultValues: {
+      // Initial values from store
+    },
+  });
+
+  return {
+    formState,
+    register,
+    isLoading,
+    onSubmit: handleSubmit(performAction),
+    // Other view model concerns
+  };
+};
+```
+
+### Error Handling in View Models
+
+```typescript
+// ✅ GOOD: Explicit error handling with Result.match
+const updateUser = useCallback(
+  async (user: UserInput) => {
+    setIsLoading(true);
+    return await userCore.updateUser(user).match(
+      (updatedUser) => {
+        setIsLoading(false);
+        // Success: store is already updated by core
+      },
+      (error) => {
+        setIsLoading(false);
+        // Error: handle UI feedback
+        setErrorMessage(error.message);
+      }
+    );
+  },
+  [userCore]
+);
+```
+
+### Form Integration
+
+```typescript
+// ✅ GOOD: React Hook Form with ArkType resolver
+const { handleSubmit, formState, register } = useForm<InputType>({
+  resolver: arktypeResolver(InputSchema), // From core
+  defaultValues: {
+    name: store.currentState.user?.name,
+    email: store.currentState.user?.email,
+  },
+});
+```
+
+### Store Access
+
+```typescript
+// ✅ GOOD: Access store through context
+const { userStore } = useAppContext();
+const currentUser = userStore.currentUserState.user;
+
+// ❌ BAD: Direct store import
+import { userStore } from "src/user/user.store";
+```
+
+## Component Usage
+
+```typescript
+// ✅ GOOD: Component uses view model
+import { useFeatureViewModel } from "./feature.view-model";
+
+const FeatureComponent = observer(() => {
+  const { register, onSubmit, formState, isLoading } = useFeatureViewModel();
+  
+  return (
+    <form onSubmit={onSubmit}>
+      {/* Form fields */}
+    </form>
+  );
+});
+```
+
+## Rules
+
+1. **View models must use `useAppContext()`** to access cores and stores
+2. **Never import cores or stores directly** in view models
+3. **Always handle Result types** with `.match()` for explicit error handling
+4. **Use React Hook Form** with ArkType resolvers for form validation
+5. **Manage loading states** in view models, not in cores
+6. **Keep view models focused** on React concerns (hooks, state, forms)
+7. **Delegate business logic** to cores, never implement it in view models

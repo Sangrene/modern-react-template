@@ -1,0 +1,102 @@
+---
+description: Component library patterns and Storybook usage
+globs: **/components/**/*.tsx,**/*.stories.tsx
+alwaysApply: true
+---
+# Component Library & Storybook
+
+This project uses **Storybook** for component development and maintains a reusable component library in `/app/components`.
+
+## Core Principles
+
+### Component Reusability
+- Basic HTML components (Button, Input, Select, etc.) should be in `/app/components`
+- Each component should have a dedicated Storybook story file
+- Components should be generic and reusable across the application
+
+### Storybook Integration
+- Every component in `/app/components` must have a `.stories.tsx` file
+- Stories should demonstrate all component variants and states
+- Use Storybook for isolated component development
+
+### Component Structure
+
+```
+/app/components/
+  Button/
+    Button.tsx          # Component implementation
+    Button.stories.tsx  # Storybook stories
+    index.ts           # Exports
+```
+
+## Implementation Patterns
+
+### Creating New Components
+
+```typescript
+// ✅ GOOD: Component with Storybook
+// /app/components/Button/Button.tsx
+export const Button = ({ 
+  children, 
+  onClick, 
+  loading = false,
+  ...props 
+}: ButtonProps) => {
+  return (
+    <button 
+      onClick={onClick} 
+      disabled={loading}
+      {...props}
+    >
+      {loading ? <Spinner /> : children}
+    </button>
+  );
+};
+
+// /app/components/Button/Button.stories.tsx
+import type { Meta, StoryObj } from "@storybook/react";
+import { Button } from "./Button";
+
+const meta: Meta<typeof Button> = {
+  component: Button,
+  title: "Components/Button",
+};
+
+export default meta;
+type Story = StoryObj<typeof Button>;
+
+export const Default: Story = {
+  args: {
+    children: "Click me",
+  },
+};
+
+export const Loading: Story = {
+  args: {
+    children: "Loading...",
+    loading: true,
+  },
+};
+```
+
+### Using Components
+
+```typescript
+// ✅ GOOD: Use components from /app/components
+import { Button } from "~/components/Button";
+import { Spinner } from "~/components/Spinner";
+
+// ❌ BAD: Create inline components when reusable ones exist
+<button className="...">Click</button>
+```
+
+## Rules
+
+1. **Always check `/app/components` first** before creating new basic components
+2. **Create Storybook stories** for all new components in `/app/components`
+3. **Use existing components** when possible instead of creating new ones
+4. **Keep components generic** and reusable, not feature-specific
+5. **Export components** through `index.ts` files
+6. **Document component props** with TypeScript interfaces
+7. **Test components** in Storybook before using in features
+8. **Follow naming convention**: ComponentName/ComponentName.tsx
